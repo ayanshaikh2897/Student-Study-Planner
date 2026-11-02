@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Study Planner</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gray-100 text-gray-800" id="body">
+
+  <!-- Demo login: this is a local front-end profile, not secure authentication. -->
+  <div id="auth-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/80 backdrop-blur-sm">
+    <div class="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl mx-4">
+      <div class="text-center mb-6">
+        <div class="w-12 h-12 bg-blue-600 text-white font-bold rounded-2xl flex items-center justify-center text-2xl mx-auto mb-2">S</div>
+        <h2 class="text-2xl font-bold text-gray-900">Student Login</h2>
+        <p class="text-sm text-gray-500">Enter your details to access your dashboard</p>
+      </div>
+      <form id="login-form" class="space-y-4">
+        <input id="login-name" type="text" placeholder="Full name" required class="w-full px-4 py-3 rounded-xl border">
+        <div class="grid grid-cols-2 gap-3">
+          <input id="login-course" type="text" placeholder="Course" required class="w-full px-4 py-3 rounded-xl border">
+          <input id="login-prn" type="text" placeholder="PRN number" required class="w-full px-4 py-3 rounded-xl border">
+        </div>
+        <div class="mb-4">
+    <label class="block mb-2 font-medium">
+        Mobile Number
+    </label>
+
+    <input
+        type="tel"
+        id="mobile-number"
+        placeholder="Enter your 10-digit mobile number"
+        maxlength="10"
+        pattern="[0-9]{10}"
+        required
+        class="w-full p-3 border rounded-xl"
+    >
+</div>
+        <input id="login-email" type="email" placeholder="Email" required class="w-full px-4 py-3 rounded-xl border">
+        <input id="login-password" type="password" placeholder="Password" required class="w-full px-4 py-3 rounded-xl border">
+        <button class="w-full bg-blue-600 text-white font-semibold py-3 rounded-xl hover:bg-blue-700">Access Planner</button>
+      </form>
+      
+    </div>
+  </div>
+
+  <div id="app-container" class="flex min-h-screen overflow-hidden hidden">
+    <aside id="sidebar" class="w-64 shrink-0 bg-white border-r border-gray-200 flex flex-col justify-between p-4">
+      <div>
+        <div class="flex items-center gap-3 px-2 py-3 mb-6">
+          <div class="w-10 h-10 bg-blue-600 text-white font-bold rounded-xl flex items-center justify-center text-xl">S</div>
+          <span class="font-bold text-lg tracking-wider">STUDY PLANNER</span>
+        </div>
+        <nav class="space-y-1">
+          <button data-tab="overview" class="nav-item active flex items-center gap-3 w-full px-4 py-3 rounded-xl text-left"><i class="fa-solid fa-chart-pie w-5"></i>Overview</button>
+          <button data-tab="tasks" class="nav-item flex items-center gap-3 w-full px-4 py-3 rounded-xl text-left"><i class="fa-solid fa-check w-5"></i>My Tasks</button>
+          <button data-tab="subjects" class="nav-item flex items-center gap-3 w-full px-4 py-3 rounded-xl text-left"><i class="fa-solid fa-book w-5"></i>Subjects</button>
+          <button data-tab="timetable" class="nav-item flex items-center gap-3 w-full px-4 py-3 rounded-xl text-left"><i class="fa-solid fa-clock w-5"></i>Timetable</button>
+          <button data-tab="exams" class="nav-item flex items-center gap-3 w-full px-4 py-3 rounded-xl text-left"><i class="fa-solid fa-calendar-days w-5"></i>Exam Tracker</button>
+          <button data-tab="reminders" class="nav-item flex items-center gap-3 w-full px-4 py-3 rounded-xl text-left"><i class="fa-solid fa-bell w-5"></i>Reminders</button>
+          <button data-tab="results" class="nav-item flex items-center gap-3 w-full px-4 py-3 rounded-xl text-left"><i class="fa-solid fa-graduation-cap w-5"></i>Results</button>
+          <button data-tab="resources" class="nav-item flex items-center gap-3 w-full px-4 py-3 rounded-xl text-left"><i class="fa-solid fa-folder-open w-5"></i>Resources & PDFs</button>
+          <button data-tab="techniques" class="nav-item flex items-center gap-3 w-full px-4 py-3 rounded-xl text-left"><i class="fa-solid fa-lightbulb w-5"></i>Quotes & Techniques</button>
+        </nav>
+      </div>
+      <button id="logout-btn" class="flex items-center gap-2 text-red-500 font-medium px-4 py-2 hover:bg-red-50 rounded-lg w-full"><i class="fa-solid fa-arrow-right-from-bracket"></i>Sign out</button>
+    </aside>
+
+    <main class="flex-1 min-w-0 flex flex-col overflow-y-auto">
+      <header class="p-6 pb-2 flex flex-wrap justify-between items-center gap-4">
+        <div>
+          <span class="text-xs uppercase font-semibold text-gray-400 tracking-wider">YOUR PERSONAL DASHBOARD</span>
+          <h1 class="text-3xl font-bold" id="welcome-heading">Good day 👋</h1>
+        </div>
+        <div class="flex items-center gap-3">
+          <button id="theme-btn" class="surface bg-white px-4 py-2 rounded-xl border shadow-sm"><i class="fa-solid fa-moon text-amber-500"></i>🌙 Dark Mode</button>
+          <div class="relative">
+            <button id="profile-btn" class="bg-blue-600 text-white px-4 py-2 rounded-xl font-medium">My Profile <i class="fa-solid fa-chevron-down text-xs"></i></button>
+            <div id="profile-popup" class="profile-popup hidden absolute right-0 mt-2 w-64 bg-white border rounded-xl shadow-xl p-4 z-40">
+              <h4 class="font-bold" id="profile-name">User Name</h4><p class="text-xs text-gray-500" id="profile-email"></p>
+              <hr class="my-2"><p class="text-sm">Course: <span id="profile-course">-</span></p><p class="text-sm">PRN: <span id="profile-prn">-</span></p>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div class="p-6 space-y-6">
+        <!-- OVERVIEW -->
+        <section id="tab-overview" class="tab-content space-y-6">
+          <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
+            <div class="card bg-white border rounded-2xl p-5 shadow-sm"><div class="text-blue-600 text-xl mb-3"><i class="fa-solid fa-check-circle"></i></div><p class="text-xs muted text-gray-400 uppercase">Tasks completed</p><h3 id="stat-completed" class="text-3xl font-bold">0</h3><p id="stat-total" class="text-xs muted text-gray-400">0 total tasks</p></div>
+            <div class="card bg-white border rounded-2xl p-5 shadow-sm"><div class="text-purple-600 text-xl mb-3"><i class="fa-solid fa-book"></i></div><p class="text-xs muted text-gray-400 uppercase">My subjects</p><h3 id="stat-subjects" class="text-3xl font-bold">0</h3><p class="text-xs muted text-gray-400">Keep learning every day</p></div>
+            <div class="card bg-white border rounded-2xl p-5 shadow-sm"><div class="text-green-600 text-xl mb-3"><i class="fa-solid fa-calendar-check"></i></div><p class="text-xs muted text-gray-400 uppercase">Upcoming exams</p><h3 id="stat-exams" class="text-3xl font-bold">0</h3><p class="text-xs muted text-gray-400">Exams still to come</p></div>
+            <div class="card bg-white border rounded-2xl p-5 shadow-sm"><div class="text-amber-600 text-xl mb-3"><i class="fa-solid fa-chart-line"></i></div><p class="text-xs muted text-gray-400 uppercase">Task progress</p><h3 id="stat-progress" class="text-3xl font-bold">0%</h3><div class="w-full bg-gray-200 h-2 rounded-full mt-3 overflow-hidden"><div id="progress-bar" class="bg-blue-600 h-full w-0"></div></div></div>
+          </div>
+          <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+            <div class="card bg-white border rounded-2xl p-6 shadow-sm">
+              <h2 class="font-bold text-lg mb-1">Task Analytics</h2><p class="text-sm muted text-gray-500 mb-4">Completed versus pending tasks</p>
+              <div class="chart-wrap"><canvas id="task-chart"></canvas></div>
+            </div>
+            <div class="card bg-white border rounded-2xl p-6 shadow-sm">
+              <h2 class="font-bold text-lg mb-1">Study Progress</h2><p class="text-sm muted text-gray-500 mb-4">Your overall task completion percentage</p>
+              <div class="chart-wrap"><canvas id="progress-chart"></canvas></div>
+            </div>
+          </div>
+          <div class="card bg-white border rounded-2xl p-6 shadow-sm">
+            <h2 class="font-bold text-lg mb-3">Upcoming exams</h2><div id="overview-exams" class="space-y-2 text-sm muted text-gray-500">No exams added yet.</div>
+          </div>
+        </section>
+
+        <!-- TASKS -->
+        <section id="tab-tasks" class="tab-content hidden">
+          <div class="card bg-white border rounded-2xl p-6 shadow-sm">
+            <div class="flex justify-between items-center mb-5"><div><p class="text-xs text-gray-400 uppercase">Stay on track</p><h2 class="text-xl font-bold">My Tasks</h2></div><span id="task-badge" class="text-xs bg-gray-100 px-3 py-1 rounded-full">0 tasks</span></div>
+            <form id="task-form" class="grid grid-cols-1 md:grid-cols-4 gap-3 mb-6">
+              <input id="task-input" required placeholder="What do you need to study?" class="md:col-span-2 px-4 py-3 rounded-xl border">
+              <select id="task-subject-select" class="px-4 py-3 rounded-xl border"><option value="">No subject</option></select>
+              <input id="task-date" type="date" class="px-4 py-3 rounded-xl border">
+              <button class="bg-blue-600 text-white rounded-xl px-4 py-3 hover:bg-blue-700"><i class="fa-solid fa-plus"></i> Add task</button>
+            </form>
+            <div id="tasks-list" class="space-y-2"><p class="text-sm text-gray-400">Add your first study task!</p></div>
+          </div>
+        </section>
+
+        <!-- SUBJECTS -->
+        <section id="tab-subjects" class="tab-content hidden">
+          <div class="card bg-white border rounded-2xl p-6 shadow-sm">
+            <h2 class="text-xl font-bold mb-4">Subjects</h2>
+            <form id="subject-form" class="flex flex-col sm:flex-row gap-3 mb-6"><input id="subject-input" required placeholder="Add a subject (e.g. Mathematics)" class="flex-1 px-4 py-3 rounded-xl border"><button class="bg-blue-600 text-white rounded-xl px-6 py-3">Add Subject</button></form>
+            <div id="subjects-list" class="grid grid-cols-1 md:grid-cols-3 gap-3"></div>
+          </div>
+        </section>
+
+        <!-- TIMETABLE -->
+        <section id="tab-timetable" class="tab-content hidden">
+          <div class="card bg-white border rounded-2xl p-6 shadow-sm">
+            <h2 class="text-xl font-bold mb-4">Timetable Schedule</h2>
+            <form id="slot-form" class="grid grid-cols-1 md:grid-cols-4 gap-3 mb-6"><input id="time-from" type="time" required class="px-4 py-3 rounded-xl border"><input id="time-to" type="time" required class="px-4 py-3 rounded-xl border"><input id="slot-title" required placeholder="Study session / Topic" class="px-4 py-3 rounded-xl border"><button class="bg-blue-600 text-white rounded-xl px-4 py-3">Add Slot</button></form>
+            <div id="timetable-list" class="space-y-3"></div>
+          </div>
+        </section>
+
+        <!-- EXAM TRACKER -->
+        <section id="tab-exams" class="tab-content hidden">
+          <div class="card bg-white border rounded-2xl p-6 shadow-sm">
+            <p class="text-xs text-gray-400 uppercase">Prepare before the deadline</p><h2 class="text-xl font-bold mb-4">Exam Tracker</h2>
+            <form id="exam-form" class="grid grid-cols-1 md:grid-cols-4 gap-3 mb-6">
+              <input id="exam-name" required placeholder="Exam name (e.g. Mathematics CIA)" class="px-4 py-3 rounded-xl border">
+              <input id="exam-subject" required placeholder="Subject" class="px-4 py-3 rounded-xl border">
+              <input id="exam-date" type="date" required class="px-4 py-3 rounded-xl border">
+              <button class="bg-blue-600 text-white rounded-xl px-4 py-3">Add exam</button>
+            </form>
+            <div id="exams-list" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+          </div>
+        </section>
+
+        <!-- REMINDERS -->
+        <section id="tab-reminders" class="tab-content hidden">
+          <div class="card bg-white border rounded-2xl p-6 shadow-sm">
+            <p class="text-xs text-gray-400 uppercase">Never miss a study task</p><h2 class="text-xl font-bold mb-4">Reminders</h2>
+            <form id="reminder-form" class="grid grid-cols-1 md:grid-cols-4 gap-3 mb-4">
+              <input id="reminder-title" required placeholder="Reminder title" class="px-4 py-3 rounded-xl border">
+              <input id="reminder-date" type="date" required class="px-4 py-3 rounded-xl border">
+              <input id="reminder-time" type="time" required class="px-4 py-3 rounded-xl border">
+              <button class="bg-blue-600 text-white rounded-xl px-4 py-3">Set reminder</button>
+            </form>
+            <p class="text-xs text-gray-500 mb-5">In-page alerts work while this planner is open. Browser notifications depend on your permission and browser support.</p>
+            <div id="reminders-list" class="space-y-3"></div>
+          </div>
+        </section>
+
+        <!-- RESULTS -->
+        <section id="tab-results" class="tab-content hidden space-y-6">
+          <div class="card bg-white border rounded-2xl p-6 shadow-sm">
+            <p class="text-xs text-gray-400 uppercase">Track your examination performance</p><h2 class="text-xl font-bold mb-4">Add Examination Marks</h2>
+            <form id="result-form" class="grid grid-cols-1 md:grid-cols-5 gap-3">
+              <input id="result-exam" required placeholder="Exam name" class="px-4 py-3 rounded-xl border">
+              <input id="result-subject" required placeholder="Subject" class="px-4 py-3 rounded-xl border">
+              <input id="result-obtained" type="number" min="0" step="0.5" required placeholder="Marks obtained" class="px-4 py-3 rounded-xl border">
+              <input id="result-total" type="number" min="1" step="0.5" required placeholder="Total marks" class="px-4 py-3 rounded-xl border">
+              <button class="bg-blue-600 text-white rounded-xl px-4 py-3">Save marks</button>
+            </form>
+            <p class="text-xs text-gray-500 mt-2">Enter marks for each subject. The obtained marks cannot exceed the total marks.</p>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="card bg-white border rounded-2xl p-5"><p class="text-xs text-gray-400 uppercase">Total obtained</p><h3 id="result-obtained-total" class="text-3xl font-bold mt-2">0</h3></div>
+            <div class="card bg-white border rounded-2xl p-5"><p class="text-xs text-gray-400 uppercase">Total maximum</p><h3 id="result-maximum-total" class="text-3xl font-bold mt-2">0</h3></div>
+            <div class="card bg-white border rounded-2xl p-5"><p class="text-xs text-gray-400 uppercase">Overall percentage</p><h3 id="result-percentage" class="text-3xl font-bold mt-2">0%</h3></div>
+          </div>
+          <div class="card bg-white border rounded-2xl p-6 shadow-sm">
+            <div class="flex flex-wrap justify-between items-center gap-3 mb-4"><h2 class="text-lg font-bold">Subject-wise Result Report</h2><select id="result-filter" class="px-3 py-2 border rounded-lg"><option value="all">All exams</option></select></div>
+            <div id="results-list" class="overflow-x-auto"></div>
+          </div>
+          <div class="card bg-white border rounded-2xl p-6 shadow-sm">
+            <h2 class="font-bold text-lg mb-1">Result Performance Graph</h2><p class="text-sm text-gray-500 mb-4">Percentage scored in each subject for the selected exam</p>
+            <div class="chart-wrap"><canvas id="result-chart"></canvas></div>
+          </div>
+        </section>
+
+        <!-- RESOURCES -->
+        <section id="tab-resources" class="tab-content hidden">
+          <div class="card bg-white border rounded-2xl p-6 shadow-sm">
+            <h2 class="text-xl font-bold mb-4">Resources & Links</h2>
+            <form id="resource-form" class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6"><input id="resource-name" required placeholder="Resource title" class="px-4 py-3 rounded-xl border"><input id="resource-url" type="url" required placeholder="https://..." class="px-4 py-3 rounded-xl border"><button class="bg-blue-600 text-white rounded-xl px-4 py-3">Save resource</button></form>
+            <div id="resources-list" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
+          </div>
+        </section>
+
+        <!-- TECHNIQUES -->
+        <section id="tab-techniques" class="tab-content hidden space-y-5">
+          <div class="rounded-2xl p-7 text-white shadow-md bg-gradient-to-r from-blue-600 to-indigo-600"><i class="fa-solid fa-quote-left text-3xl opacity-50"></i><p class="text-xl font-medium italic mt-2" id="quote-text">"Success is the sum of small efforts, repeated day in and day out."</p><p class="text-sm mt-3 text-blue-100">— Robert Collier</p></div>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="card bg-white border rounded-2xl p-5"><h3 class="font-bold text-lg mb-2 text-blue-600">⏱️ Pomodoro Technique</h3><p class="text-sm muted text-gray-600">Study for 25 minutes, then take a 5-minute break. After four rounds, take a longer break.</p></div>
+            <div class="card bg-white border rounded-2xl p-5"><h3 class="font-bold text-lg mb-2 text-purple-600">🧠 Feynman Technique</h3><p class="text-sm muted text-gray-600">Explain a concept in simple words. Find gaps in your understanding and review them.</p></div>
+            <div class="card bg-white border rounded-2xl p-5"><h3 class="font-bold text-lg mb-2 text-green-600">🔄 Active Recall</h3><p class="text-sm muted text-gray-600">Test yourself without looking at notes using flashcards and practice questions.</p></div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+  <script src="script.js"></script>
+</body>
+</html>
+
+  
